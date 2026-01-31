@@ -74,6 +74,69 @@ To run your Python scripts:
 docker-compose exec python-app python your_script.py
 ```
 
+## Kafka Producer Script
+
+The `producer.py` script generates fake ecommerce events and sends them to Kafka.
+
+### Installation
+
+Install dependencies in the Python container:
+
+```bash
+docker-compose exec python-app pip install -r requirements.txt
+```
+
+### Usage
+
+**Basic usage (default: 1-5 seconds between events):**
+```bash
+docker-compose exec python-app python producer.py
+```
+
+**High load simulation (0.1-0.5 seconds between events):**
+```bash
+docker-compose exec python-app python producer.py --rate-min 0.1 --rate-max 0.5
+```
+
+**Produce a specific number of events:**
+```bash
+docker-compose exec python-app python producer.py --max-events 100
+```
+
+**Custom rate and topic:**
+```bash
+docker-compose exec python-app python producer.py --rate-min 2 --rate-max 5 --topic my-topic
+```
+
+### Producer Options
+
+- `--rate-min`: Minimum seconds between events (default: 1.0)
+- `--rate-max`: Maximum seconds between events (default: 5.0)
+- `--max-events`: Maximum number of events to produce (default: unlimited)
+- `--topic`: Kafka topic name (default: `ecommerce-events`)
+- `--bootstrap-servers`: Kafka bootstrap servers (default: uses `KAFKA_BOOTSTRAP_SERVERS` env var or `kafka:9093`)
+
+### Event Structure
+
+Each event contains:
+- `user_id`: UUID4
+- `event_type`: One of "view", "add_to_cart", "purchase"
+- `product`: Random word
+- `timestamp`: ISO format datetime
+- `amount`: Random amount between $10-$100
+
+### Testing the Producer
+
+1. **Start the producer** (in one terminal):
+   ```bash
+   docker-compose exec python-app python producer.py --max-events 10
+   ```
+
+2. **Consume messages** (in another terminal):
+   ```bash
+   docker-compose exec kafka kafka-console-consumer --bootstrap-server localhost:9092 --topic ecommerce-events --from-beginning
+   ```
+
 ### Useful Commands
 
 - **Restart a specific service:**
